@@ -45,7 +45,9 @@ module "eks" {
       max_size     = 3
       desired_size = 2
 
-      instance_types = ["t2.medium"]
+      # t3/t3a are Nitro-based; AL2023 EKS AMIs (module v21 default) do not
+      # support Xen instances like t2. Multiple types improve SPOT fulfilment.
+      instance_types = ["t3.medium", "t3a.medium"]
       capacity_type  = "SPOT"
 
       tags = {

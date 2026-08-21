@@ -11,9 +11,9 @@ Production-ready Amazon EKS cluster provisioned with Terraform using official AW
                         │  ┌──────────────┐    ┌──────────────┐      │
                         │  │  Public Sub   │    │  Public Sub   │      │
                         │  │  10.0.1.0/24  │    │  10.0.2.0/24  │      │
-                        │  │  (us-east-2a) │    │  (us-east-2b) │      │
+                        │  │ (ap-south-1a) │    │ (ap-south-1b) │      │
                         │  └──────┬───────┘    └──────┬───────┘      │
-                        │         │ NAT GW            │ NAT GW       │
+                        │         │ NAT GW (shared across both AZs)   │
                         │  ┌──────┴───────┐    ┌──────┴───────┐      │
                         │  │ Private Sub   │    │ Private Sub   │      │
                         │  │ 10.0.3.0/24   │    │ 10.0.4.0/24   │      │
@@ -30,9 +30,9 @@ Production-ready Amazon EKS cluster provisioned with Terraform using official AW
 | Resource | Details |
 |---|---|
 | **VPC** | `10.0.0.0/16` across 2 AZs with public, private, and intra subnets |
-| **NAT Gateways** | One per AZ for private subnet internet access |
+| **NAT Gateways** | Single shared NAT gateway for private subnet internet access |
 | **EKS Cluster** | `my-eks-cluster` running Kubernetes **1.35** |
-| **Node Group** | `bankapp-ng` — 2-3 `t2.medium` SPOT instances on AL2023 |
+| **Node Group** | `bankapp-ng` — 2-3 `t3.medium`/`t3a.medium` SPOT instances on AL2023 |
 | **Add-ons** | CoreDNS, kube-proxy, VPC-CNI, EKS Pod Identity Agent |
 | **Security** | KMS encryption, OIDC provider, cluster creator admin access |
 
@@ -67,7 +67,7 @@ terraform apply
 
 ```bash
 # Configure kubectl (also shown in terraform output)
-aws eks update-kubeconfig --name my-eks-cluster --region us-east-2
+aws eks update-kubeconfig --name my-eks-cluster --region ap-south-1
 
 # Verify
 kubectl get nodes
@@ -107,9 +107,9 @@ kubectl get pods -A
 | Resource | Estimated Cost |
 |---|---|
 | EKS Cluster | ~$0.10/hr ($73/mo) |
-| NAT Gateways (x2) | ~$0.045/hr each ($65/mo total) |
-| t2.medium SPOT (x2) | ~$0.012/hr each ($17/mo total) |
-| **Total estimate** | **~$155/mo** |
+| NAT Gateway (x1) | ~$0.045/hr (~$33/mo) |
+| t3.medium SPOT (x2) | ~$0.013/hr each (~$19/mo total) |
+| **Total estimate** | **~$125/mo** |
 
 Costs vary by region and SPOT pricing. Destroy when not in use to avoid charges.
 
